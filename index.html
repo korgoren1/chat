@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Dark Chat Simulation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  body {
+    background-color: #121212;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #fff;
+  }
+
+  /* PHONE-LIKE CHAT WRAPPER */
+  .phone-wrapper {
+    width: 360px;
+    height: 640px;
+    border-radius: 30px;
+    overflow: hidden;
+    background-color: #121212;
+    border: 2px solid #00ff99;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 25px #00ff99;
+    position: relative;
+  }
+
+  /* LOGIN CONTAINER */
+  .login-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+    transition: opacity 1s ease;
+  }
+
+  .login-container h1 {
+    color: #00ff99;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px #00ff99;
+    text-align: center;
+  }
+
+  .login-input {
+    background: transparent;
+    border: 2px solid #00ff99;
+    color: #00ff99;
+    padding: 10px;
+    border-radius: 10px;
+    width: 80%;
+    text-align: center;
+    margin-bottom: 15px;
+    outline: none;
+    font-size: 1rem;
+  }
+
+  .login-btn {
+    background: #00ff99;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .login-btn:hover {
+    background: #00cc7a;
+  }
+
+  #loginStatus {
+    margin-top: 10px;
+    color: #ff4444;
+  }
+
+  /* CHAT CONTAINER */
+  .chat-container {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #121212;
+  }
+
+  .message {
+    display: flex;
+    align-items: flex-end;
+    margin: 8px 0;
+    max-width: 75%;
+    line-height: 1.4;
+    transition: all 0.3s;
+  }
+
+  .personA {
+    justify-content: flex-start;
+  }
+
+  .personB {
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+
+  .bubble {
+    padding: 10px 15px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    max-width: 80%;
+    word-wrap: break-word;
+    position: relative;
+  }
+
+  .personA .bubble {
+    background: #1e1e1e;
+    color: #fff;
+    border: 1px solid #00ffcc;
+    border-top-left-radius: 0;
+  }
+
+  .personB .bubble {
+    background: #00ff99;
+    color: #000;
+    border-top-right-radius: 0;
+  }
+
+  .dp {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin: 0 8px;
+  }
+
+  .personA .dp { order: -1; }
+  .personB .dp { order: 1; }
+
+  /* Typing effect */
+  .typing {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+  }
+
+  .typing-dot {
+    height: 8px;
+    width: 8px;
+    margin: 0 2px;
+    background-color: #00ff99;
+    border-radius: 50%;
+    animation: bounce 1s infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+  }
+
+  /* Scrollbar style */
+  .chat-container::-webkit-scrollbar {
+    width: 5px;
+  }
+  .chat-container::-webkit-scrollbar-thumb {
+    background: #00ff99;
+    border-radius: 10px;
+  }
+
+  .chat-container::-webkit-scrollbar-track {
+    background: #121212;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="phone-wrapper">
+  <div class="login-container" id="loginContainer">
+    <h1>🔐 Access Chat</h1>
+    <input type="password" id="passwordInput" class="login-input" placeholder="Enter Access Code">
+    <button class="login-btn" onclick="login()">Enter 💬</button>
+    <p id="loginStatus"></p>
+  </div>
+
+  <div class="chat-container" id="chatContainer"></div>
+</div>
+
+<audio id="bgMusic" loop>
+  <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  const PASSWORD = "vivian01";
+
+  const chatMessages = [
+    {sender:'personB', text:'Can I amaze you 😏'},
+    {sender:'personA', text:'huz dis?'},
+    {sender:'personB', text:'i just want to amaze you, please give me permission'},
+    {sender:'personA', text:'oky go on'},
+    {sender:'personB', text:'NYC'},
+    {sender:'personA', text:"I'm listening"},
+    {sender:'personB', text:'Ooh so you never got it???'},
+    {sender:'personA', text:'get what🤔'},
+    {sender:'personB', text:'i just described you 😻'},
+    {sender:'personA', text:'how??'},
+    {sender:'personB', text:'i 100% described you by saying NYC'},
+    {sender:'personB', text:"You're absolutely Natural, Young & Cute"},
+    {sender:'personA', text:'m, okay huz dis?'},
+    {sender:'personB', text:'All I want you to call me is "MINE"'},
+    {sender:'personA', text:'thnk u 4 d NYC msg, it kinda made me smile, But I dnt tok 2 strangers sry'},
+    {sender:'personA', text:'sry'},
+    {sender:'personB', text:"And who told you that I'm a stranger 🤔"},
+    {sender:'personA', text:'ah dnt knw u'},
+    {sender:'personB', text:'I prefer you call me "Mine" but my name is Korgoren'},
+    {sender:'personB', text:'we met at UOE field behind mess'},
+    {sender:'personA', text:"sry, ah mit alot of people at UOE field behind mess"},
+    {sender:'personA', text:"ah, don't remember you"},
+    {sender:'personB', text:'(photo)'},
+    {sender:'personB', text:'you will slowly'},
+    {sender:'personA', text:'humm, and who gave you my number'},
+    {sender:'personB', text:"Stop asking me alot of questions, I'm not here for an interview"},
+    {sender:'personA', text:'stop texting me, stupid 🙄'},
+    {sender:'personB', text:"U're not Messi or Ronaldo Young girl"},
+    {sender:'personB', text:"never ask a guy where he got your number, u're not a celebrity"},
+    {sender:'personB', text:"You're not Taylor Swift"},
+    {sender:'personB', text:"Nobody knows you, just be glad that someone is trying to get to know you"},
+    {sender:'personA', text:'stupid idiot, did i send you to text me☹️☹️'},
+    {sender:'personA', text:'silly'},
+    {sender:'personA', text:'stupid 🖕'},
+    {sender:'personB', text:"now you can block me, I've already got what I wanted 😎"},
+    {sender:'personA', text:'what did you want'},
+    {sender:'personB', text:'I just wanted to find out whether angels can also use words like stupid & idiot'},
+    {sender:'personB', text:'I have my answer now'},
+    {sender:'personB', text:'please block me now'},
+    {sender:'personA', text:'but you guy🙈🙈😹😹'},
+    {sender:'personA', text:"ok, I'm sry"},
+    {sender:'personB', text:'so angels also apologise 🙉🙉'},
+    {sender:'personA', text:'hahaha 🤭🤭'},
+    {sender:'personA', text:"I'm not an angel 😻"},
+    {sender:'personB', text:"Then you're related to God"},
+    {sender:'personB', text:'Coz He granted all the beauty fit for all Keiyo girls to you alone'},
+    {sender:'personA', text:'🤣🤣🤣you guys always come up with a new approach'},
+    {sender:'personB', text:'Just imagining you smiling make me forget all my problems'},
+    {sender:'personA', text:'can u remind me ur nem plz'},
+    {sender:'personB', text:'My friends will soon start calling me kipro'},
+    {sender:'personA', text:'so even told you my real name'},
+    {sender:'personA', text:"how's that possible"},
+    {sender:'personB', text:'just like you drive me crazy even without a car?'},
+    {sender:'personA', text:'humm'},
+    {sender:'personB', text:"U're not a Tiktok video, but the moment I found you interesting, I liked you immediately"},
+    {sender:'personA', text:'wow😻😻😻seriously you guy'},
+    {sender:'personA', text:'ur funny'},
+    {sender:'personA', text:'btw r u on tiktok'},
+    {sender:'personB', text:'Not really'},
+    {sender:'personA', text:'how comes you know what happens there'},
+    {sender:'personB', text:'The guy surprised me😹'},
+    {sender:'personA', text:'wch guy'},
+    {sender:'personB', text:'The one who was teaching me how Tiktok works'},
+    {sender:'personB', text:'Dude just described how I fell in love with you'},
+    {sender:'personA', text:'wat did he say??'},
+    {sender:'personB', text:'Tiktok is just like how I scrolled over all other girls, and saw you, liked you, commented on you, now I’m to follow you till death 💋'},
+    {sender:'personA', text:'hahaha 😃😁😹'},
+    {sender:'personA', text:"seriously, I've met many guys trying to hook me up, but you guy 🙆‍♂️🙆‍♂️😹😹"},
+    {sender:'personB', text:'When our friends ask us how we met, we should tell them funny answers only'},
+    {sender:'personA', text:'Answers like what'},
+    {sender:'personB', text:'We can tell them that we met at MYOB'},
+    {sender:'personA', text:'you mean MUBS'},
+    {sender:'personB', text:'MYOB'},
+    {sender:'personA', text:'Wats myob?'},
+    {sender:'personB', text:'mind your own business'},
+    {sender:'personA', text:'😻😻😻😻 ur so hilarious😹😃'},
+    {sender:'personB', text:'They say nothing lasts forever'},
+    {sender:'personB', text:'viviana please be my nothing 🙏'},
+    {sender:'personA', text:'ur such an amazing dude, but I wud rly want 2 knw mo abt u'},
+    {sender:'personB', text:'How about a KAMD'},
+    {sender:'personA', text:'wats dat again 🙈😹'},
+    {sender:'personB', text:'Know About Me Dinner'},
+    {sender:'personA', text:'🤣🤣🤣🤣 oky, dat will work coz seriously I’m sure u’ll kill me with romantic laughter'},
+    {sender:'personB', text:'The crime of stealing your heart is enough, no other crimes 🤣🤣'},
+    {sender:'personA', text:'oky😂😂😂'},
+    {sender:'personB', text:'how about Saturday 5pm'},
+    {sender:'personA', text:'where??'},
+    {sender:'personB', text:'We meet everyday in my dreams, so my apartment will be better'},
+    {sender:'personA', text:'Your apartment🤣😂'},
+    {sender:'personB', text:"Don't worry I have no bed bags, bed sheets are white and I learnt how to cook 😻"},
+    {sender:'personA', text:'guys with tricks😹😹'},
+    {sender:'personB', text:"I was made different, u'll prove when u come.."},
+    {sender:'personA', text:'okay send me the location'},
+    {sender:'personB', text:'Oky viviana💪💪'}
+  ];
+
+  const personAImg = 'IMG-20251104-WA0003.jpg';
+  const personBImg = '20251019_111504.jpg';
+
+  function login() {
+    const input = document.getElementById('passwordInput').value;
+    const status = document.getElementById('loginStatus');
+    if(input === PASSWORD){
+      document.getElementById('loginContainer').style.opacity = '0';
+      setTimeout(()=> {
+        document.getElementById('loginContainer').style.display = 'none';
+        showChat();
+      }, 1000);
+    } else {
+      status.textContent = "❌ Access Denied";
+    }
+  }
+
+  function showChat() {
+    const container = document.getElementById('chatContainer');
+    container.style.display = 'flex';
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.volume = 0.4;
+    bgMusic.play().catch(()=>{});
+    
+    let i = 0;
+    function sendNext() {
+      if(i >= chatMessages.length) return;
+      
+      // Show typing
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing';
+      const dp = document.createElement('img');
+      dp.className = 'dp';
+      dp.src = chatMessages[i].sender === 'personA' ? personAImg : personBImg;
+      typingDiv.appendChild(dp);
+      for(let j=0;j<3;j++){
+        const dot = document.createElement('div');
+        dot.className='typing-dot';
+        typingDiv.appendChild(dot);
+      }
+      container.appendChild(typingDiv);
+      container.scrollTop = container.scrollHeight;
+      
+      setTimeout(()=>{
+        typingDiv.remove();
+        const msg = chatMessages[i];
+        const div = document.createElement('div');
+        div.className = `message ${msg.sender}`;
+        const img = document.createElement('img');
+        img.className='dp';
+        img.src = msg.sender === 'personA' ? personAImg : personBImg;
+        const bubble = document.createElement('div');
+        bubble.className='bubble';
+        bubble.textContent=msg.text;
+        div.appendChild(img);
+        div.appendChild(bubble);
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        i++;
+        sendNext();
+      }, 1500);
+    }
+
+    sendNext();
+  }
+</script>
+</body>
+</html>
